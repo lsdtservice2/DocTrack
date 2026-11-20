@@ -61,6 +61,65 @@ iosApp/                             SwiftUI host (calls initDocTrack() at launch
 
 > The module is still called `shared` (rather than `composeApp`) to keep the existing project setup intact.
 
+## Local database
+
+All app data is stored in an on-device **SQLite** database file named `doctrack.db`, accessed through
+**[SQLDelight](https://github.com/sqldelight/sqldelight) 2.4.1** (`app.cash.sqldelight`).
+
+### Packages used
+
+| Package | Where | Purpose |
+|---------|-------|---------|
+| `app.cash.sqldelight` (Gradle plugin) | build | Generates the type-safe `DocTrackDatabase` Kotlin API from the `.sq` files |
+| `app.cash.sqldelight:android-driver` | `androidMain` | `AndroidSqliteDriver`: uses Android's built-in SQLite |
+| `app.cash.sqldelight:native-driver` | `iosMain` | `NativeSqliteDriver`: uses iOS's system SQLite (via SQLiter) |
+| `app.cash.sqldelight:coroutines-extensions` | `commonMain` | `asFlow()` / `mapToList()`: queries become `Flow`s so the UI updates automatically |
+| `app.cash.sqldelight:sqlite-driver` | `androidHostTest` | JDBC in-memory SQLite for running database tests on the JVM |
+
+### Why SQLDelight
+
+* **Kotlin Multiplatform support.** One schema and one set of queries live in `commonMain` and are shared
+  by Android and iOS. Only the small driver factory (`DatabaseDriverFactory`) is platform-specific.
+* **SQL first, type-safe Kotlin out.** Tables and queries are written in plain SQL (`.sq` files), and
+  SQLDelight generates Kotlin data classes and query functions. Bad SQL, wrong column names and type
+  mismatches are caught **at compile time**, not at runtime.
+* **Uses the platform's own SQLite.** There's no extra native engine to bundle, so the app stays small, and
+  SQLite is proven, transactional and fully offline. That suits an app with no backend.
+* **Reactive queries.** With the coroutines extensions, dashboard, list and calendar screens observe
+  queries as `Flow`s and refresh whenever data changes.
+* **Real relational features.** Foreign keys (`ON DELETE CASCADE` / `RESTRICT`), unique indexes and
+  transactions keep documents, reminders, attachments and history consistent. Backup restore runs in a
+  single transaction.
+* **Safe schema evolution.** `verifyMigrations = true`, and a schema snapshot (`databases/1.db`) lets
+  Gradle check future migrations against the shipped schema.
+
+### Schema
+
+Defined in `shared/src/commonMain/sqldelight/com/logisparktech/doctrack/db/`:
+
+| Table | File | Contents |
+|-------|------|----------|
+| `DocumentCategories` | `DocumentCategory.sq` | Category name, icon, colour. 14 default categories are seeded (passport, driving licence, citizenship, insurance, …) |
+| `Documents` | `Document.sq` | Name, number, category, issuing authority, issue/expiry/renewal dates, notes, archive flag |
+| `DocumentReminders` | `DocumentReminder.sq` | "Days before expiry" reminders per document (unique per document + day) |
+| `DocumentAttachments` | `DocumentAttachment.sq` | Metadata and relative path of attached files |
+| `RenewalHistory` | `RenewalHistory.sq` | Previous and new issue/expiry dates recorded on each renewal |
+| `AppSettings` | `AppSettings.sq` | Single row: language, calendar type (AD/BS), theme, default reminder days, warning threshold, reminder hour, biometric lock |
+
+Relationships: deleting a document cascades to its reminders, attachments and renewal history. A
+category that still has documents can't be deleted (`RESTRICT`).
+
+### Storage details
+
+* **Foreign keys are switched on explicitly** on both platforms (SQLite leaves them off by default):
+  `setForeignKeyConstraintsEnabled(true)` on Android and `foreignKeyConstraints = true` on iOS.
+* **Dates** are stored as ISO-8601 `TEXT` (`yyyy-MM-dd`, Gregorian) so they sort and index correctly.
+  Timestamps (`createdAt`, `updatedAt`) are epoch-millis `INTEGER`s.
+* **Attachment files are not stored in the database.** They are copied into an app-private `attachments/`
+  folder, and the table keeps only their relative path. This keeps the database small and fast.
+* **Location**: the app's private data directory (Android `databases/`, iOS app sandbox). No other app,
+  and no cloud backup, can read it.
+
 ## Key behaviours
 
 * **Status is always computed** from the expiry date and the configurable "expiring soon" threshold.
