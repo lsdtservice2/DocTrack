@@ -1,0 +1,53 @@
+-- Default categories store a stable key in `name` (translated at display time).
+CREATE TABLE DocumentCategories (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    color INTEGER NOT NULL,
+    isDefault INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE UNIQUE INDEX idx_categories_name ON DocumentCategories(name);
+
+INSERT INTO DocumentCategories(name, icon, color, isDefault) VALUES
+    ('driving_licence', 'car', 4282339765, 1),
+    ('passport', 'passport', 4284960932, 1),
+    ('citizenship', 'badge', 4294924066, 1),
+    ('national_id', 'id', 4283215696, 1),
+    ('vehicle_bluebook', 'book', 4280391411, 1),
+    ('vehicle_insurance', 'shield_car', 4294940672, 1),
+    ('health_insurance', 'health', 4293467747, 1),
+    ('life_insurance', 'heart', 4291176488, 1),
+    ('business_registration', 'business', 4286141768, 1),
+    ('academic_certificates', 'school', 4282557941, 1),
+    ('bills', 'receipt', 4288423856, 1),
+    ('subscriptions', 'subscription', 4284809178, 1),
+    ('software_licences', 'key', 4278228616, 1),
+    ('custom_documents', 'folder', 4285887861, 1);
+
+selectAll:
+SELECT * FROM DocumentCategories ORDER BY isDefault DESC, id ASC;
+
+selectById:
+SELECT * FROM DocumentCategories WHERE id = ?;
+
+insert:
+INSERT INTO DocumentCategories(name, icon, color, isDefault) VALUES (?, ?, ?, 0);
+
+insertWithId:
+INSERT OR REPLACE INTO DocumentCategories(id, name, icon, color, isDefault) VALUES (?, ?, ?, ?, ?);
+
+update:
+UPDATE DocumentCategories SET name = ?, icon = ?, color = ? WHERE id = ? AND isDefault = 0;
+
+delete:
+DELETE FROM DocumentCategories WHERE id = ? AND isDefault = 0;
+
+countDocuments:
+SELECT COUNT(*) FROM Documents WHERE categoryId = ?;
+
+deleteAll:
+DELETE FROM DocumentCategories;
+
+lastInsertId:
+SELECT last_insert_rowid();

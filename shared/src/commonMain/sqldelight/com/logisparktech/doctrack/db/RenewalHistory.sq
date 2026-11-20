@@ -1,0 +1,29 @@
+CREATE TABLE RenewalHistory (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    documentId INTEGER NOT NULL REFERENCES Documents(id) ON DELETE CASCADE,
+    previousIssueDate TEXT,
+    previousExpiryDate TEXT,
+    newIssueDate TEXT,
+    newExpiryDate TEXT,
+    renewalDate TEXT NOT NULL,
+    notes TEXT NOT NULL DEFAULT ''
+);
+
+CREATE INDEX idx_renewal_document ON RenewalHistory(documentId);
+
+selectByDocument:
+SELECT * FROM RenewalHistory WHERE documentId = ? ORDER BY renewalDate DESC, id DESC;
+
+selectAll:
+SELECT * FROM RenewalHistory;
+
+insert:
+INSERT INTO RenewalHistory(documentId, previousIssueDate, previousExpiryDate, newIssueDate, newExpiryDate, renewalDate, notes)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+insertWithId:
+INSERT INTO RenewalHistory(id, documentId, previousIssueDate, previousExpiryDate, newIssueDate, newExpiryDate, renewalDate, notes)
+VALUES ?;
+
+deleteAll:
+DELETE FROM RenewalHistory;

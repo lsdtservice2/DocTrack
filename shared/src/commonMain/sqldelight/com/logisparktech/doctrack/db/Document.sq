@@ -1,0 +1,61 @@
+-- All dates are ISO-8601 local dates (yyyy-MM-dd, Gregorian). Timestamps are epoch millis.
+CREATE TABLE Documents (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    documentNumber TEXT,
+    categoryId INTEGER NOT NULL REFERENCES DocumentCategories(id) ON DELETE RESTRICT,
+    issuingAuthority TEXT,
+    issueDate TEXT,
+    expiryDate TEXT,
+    renewalDate TEXT,
+    description TEXT NOT NULL DEFAULT '',
+    notes TEXT NOT NULL DEFAULT '',
+    renewalInProgress INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    isArchived INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX idx_documents_category ON Documents(categoryId);
+CREATE INDEX idx_documents_expiry ON Documents(expiryDate);
+CREATE INDEX idx_documents_renewal ON Documents(renewalDate);
+CREATE INDEX idx_documents_created ON Documents(createdAt);
+
+selectAll:
+SELECT * FROM Documents WHERE isArchived = 0 ORDER BY CASE WHEN expiryDate IS NULL THEN 1 ELSE 0 END, expiryDate ASC, name ASC;
+
+selectEverything:
+SELECT * FROM Documents;
+
+selectById:
+SELECT * FROM Documents WHERE id = ?;
+
+insert:
+INSERT INTO Documents(name, documentNumber, categoryId, issuingAuthority, issueDate, expiryDate, renewalDate,
+    description, notes, renewalInProgress, createdAt, updatedAt, isArchived)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);
+
+insertWithId:
+INSERT INTO Documents(id, name, documentNumber, categoryId, issuingAuthority, issueDate, expiryDate, renewalDate,
+    description, notes, renewalInProgress, createdAt, updatedAt, isArchived)
+VALUES ?;
+
+update:
+UPDATE Documents SET name = ?, documentNumber = ?, categoryId = ?, issuingAuthority = ?, issueDate = ?,
+    expiryDate = ?, renewalDate = ?, description = ?, notes = ?, renewalInProgress = ?, updatedAt = ?
+WHERE id = ?;
+
+updateDates:
+UPDATE Documents SET issueDate = ?, expiryDate = ?, renewalDate = ?, renewalInProgress = 0, updatedAt = ? WHERE id = ?;
+
+setRenewalInProgress:
+UPDATE Documents SET renewalInProgress = ?, updatedAt = ? WHERE id = ?;
+
+delete:
+DELETE FROM Documents WHERE id = ?;
+
+deleteAll:
+DELETE FROM Documents;
+
+lastInsertId:
+SELECT last_insert_rowid();

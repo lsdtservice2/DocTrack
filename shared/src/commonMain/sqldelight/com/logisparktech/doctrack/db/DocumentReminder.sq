@@ -1,0 +1,26 @@
+CREATE TABLE DocumentReminders (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    documentId INTEGER NOT NULL REFERENCES Documents(id) ON DELETE CASCADE,
+    reminderDaysBefore INTEGER NOT NULL,
+    notificationEnabled INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE UNIQUE INDEX idx_reminders_document_days ON DocumentReminders(documentId, reminderDaysBefore);
+
+selectByDocument:
+SELECT * FROM DocumentReminders WHERE documentId = ? ORDER BY reminderDaysBefore DESC;
+
+selectAll:
+SELECT * FROM DocumentReminders;
+
+insert:
+INSERT OR REPLACE INTO DocumentReminders(documentId, reminderDaysBefore, notificationEnabled) VALUES (?, ?, ?);
+
+insertWithId:
+INSERT INTO DocumentReminders(id, documentId, reminderDaysBefore, notificationEnabled) VALUES ?;
+
+deleteByDocument:
+DELETE FROM DocumentReminders WHERE documentId = ?;
+
+deleteAll:
+DELETE FROM DocumentReminders;

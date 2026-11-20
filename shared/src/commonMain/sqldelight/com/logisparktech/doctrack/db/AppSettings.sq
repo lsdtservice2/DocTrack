@@ -1,0 +1,21 @@
+-- Single-row table (id = 1). defaultReminderDays is a comma separated list, e.g. 30,15,7,3,1,0
+CREATE TABLE AppSettings (
+    id INTEGER NOT NULL PRIMARY KEY,
+    language TEXT NOT NULL DEFAULT 'en',
+    calendarType TEXT NOT NULL DEFAULT 'AD',
+    theme TEXT NOT NULL DEFAULT 'SYSTEM',
+    defaultReminderDays TEXT NOT NULL DEFAULT '30,15,7,3,1,0',
+    expiryWarningDays INTEGER NOT NULL DEFAULT 30,
+    biometricLockEnabled INTEGER NOT NULL DEFAULT 0,
+    reminderHour INTEGER NOT NULL DEFAULT 9
+);
+
+INSERT INTO AppSettings(id) VALUES (1);
+
+select:
+SELECT * FROM AppSettings WHERE id = 1;
+
+update:
+UPDATE AppSettings SET language = ?, calendarType = ?, theme = ?, defaultReminderDays = ?,
+    expiryWarningDays = ?, biometricLockEnabled = ?, reminderHour = ?
+WHERE id = 1;

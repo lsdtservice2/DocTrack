@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Attachments (for viewing/sharing a single file on request) and temporary backup exports. -->
+    <files-path name="attachments" path="attachments/" />
+    <cache-path name="shared" path="shared/" />
+</paths>

@@ -1,0 +1,32 @@
+-- fileType: FRONT_IMAGE, BACK_IMAGE, IMAGE, PDF. filePath is relative to the app attachment directory.
+CREATE TABLE DocumentAttachments (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    documentId INTEGER NOT NULL REFERENCES Documents(id) ON DELETE CASCADE,
+    fileName TEXT NOT NULL,
+    filePath TEXT NOT NULL,
+    fileType TEXT NOT NULL,
+    createdAt INTEGER NOT NULL
+);
+
+CREATE INDEX idx_attachments_document ON DocumentAttachments(documentId);
+
+selectByDocument:
+SELECT * FROM DocumentAttachments WHERE documentId = ? ORDER BY createdAt ASC;
+
+selectAll:
+SELECT * FROM DocumentAttachments;
+
+selectById:
+SELECT * FROM DocumentAttachments WHERE id = ?;
+
+insert:
+INSERT INTO DocumentAttachments(documentId, fileName, filePath, fileType, createdAt) VALUES (?, ?, ?, ?, ?);
+
+insertWithId:
+INSERT INTO DocumentAttachments(id, documentId, fileName, filePath, fileType, createdAt) VALUES ?;
+
+delete:
+DELETE FROM DocumentAttachments WHERE id = ?;
+
+deleteAll:
+DELETE FROM DocumentAttachments;
